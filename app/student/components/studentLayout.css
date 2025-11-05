@@ -1,0 +1,186 @@
+/**
+ * STUDENT LAYOUT STYLES
+ * 
+ * This file contains all styles for the main student dashboard layout.
+ * It handles the responsive behavior between sidebar and content.
+ */
+
+/* =================================
+   MAIN LAYOUT CONTAINER
+   ================================= */
+.student-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f7fafc; /* Light gray background */
+  position: relative;
+}
+
+/* =================================
+   SIDEBAR OVERLAY (Mobile Only)
+   ================================= */
+/* 
+  Dark overlay that appears behind sidebar on mobile
+  - Clicking it closes the sidebar
+  - Only visible when sidebar is open on mobile
+*/
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  display: none; /* Hidden by default */
+}
+
+/* Show overlay on mobile when sidebar is open */
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+  }
+}
+
+/* =================================
+   MAIN CONTENT AREA
+   ================================= */
+/*
+  This is where page content is rendered
+  - Adjusts margin based on sidebar state
+  - Takes remaining space after sidebar
+*/
+.student-content {
+  flex: 1;
+  margin-left: 280px; /* Space for expanded sidebar */
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* When sidebar is collapsed (desktop) */
+.student-content.sidebar-collapsed {
+  margin-left: 80px; /* Narrower margin for collapsed sidebar */
+}
+
+/* =================================
+   MOBILE HEADER
+   ================================= */
+/*
+  Header bar visible only on mobile devices
+  - Contains hamburger menu button
+  - Shows app title
+*/
+.mobile-header {
+  display: none; /* Hidden on desktop */
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a202c;
+  transition: color 0.2s;
+}
+
+.menu-toggle:hover {
+  color: #667eea;
+}
+
+.menu-toggle svg {
+  width: 24px;
+  height: 24px;
+}
+
+.mobile-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0;
+}
+
+/* =================================
+   PAGE CONTENT CONTAINER
+   ================================= */
+/*
+  Container for the actual page content
+  - Adds padding around content
+  - Ensures content doesn't touch edges
+*/
+.page-content {
+  padding: 2rem;
+  flex: 1;
+}
+
+/* =================================
+   RESPONSIVE DESIGN
+   ================================= */
+
+/* Tablet and below */
+@media (max-width: 768px) {
+  /* Remove sidebar margin on mobile */
+  .student-content {
+    margin-left: 0;
+  }
+
+  .student-content.sidebar-collapsed {
+    margin-left: 0;
+  }
+
+  /* Show mobile header */
+  .mobile-header {
+    display: flex;
+  }
+
+  /* Reduce padding on mobile */
+  .page-content {
+    padding: 1rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .page-content {
+    padding: 0.75rem;
+  }
+
+  .mobile-header {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* =================================
+   UTILITY CLASSES
+   ================================= */
+
+/* Desktop only elements */
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Mobile only elements */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+}
+

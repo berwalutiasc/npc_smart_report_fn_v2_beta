@@ -1,0 +1,221 @@
+/**
+ * LOGOUT CONFIRMATION POPUP STYLES
+ * 
+ * Styles for the logout confirmation modal popup.
+ * Supports both light and dark modes via data-theme attribute.
+ */
+
+.logout-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.logout-popup-container {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.logout-popup-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.logout-popup-close:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.logout-popup-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.logout-popup-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-radius: 50%;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.logout-popup-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+  margin: 0 0 0.75rem 0;
+  transition: color 0.3s ease;
+}
+
+.logout-popup-message {
+  color: #6b7280;
+  text-align: center;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  transition: color 0.3s ease;
+}
+
+.logout-popup-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.logout-popup-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-width: 120px;
+}
+
+.logout-popup-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.logout-popup-button-cancel {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.logout-popup-button-cancel:hover:not(:disabled) {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.logout-popup-button-confirm {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+}
+
+.logout-popup-button-confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.4);
+}
+
+.logout-popup-button-confirm:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* DARK MODE STYLES */
+[data-theme="dark"] .logout-popup-container {
+  background: #1e293b;
+  color: #f1f5f9;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .logout-popup-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .logout-popup-message {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .logout-popup-close {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .logout-popup-close:hover {
+  background-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .logout-popup-button-cancel {
+  background-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .logout-popup-button-cancel:hover:not(:disabled) {
+  background-color: #475569;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .logout-popup-container {
+    padding: 1.5rem;
+    max-width: 95%;
+  }
+
+  .logout-popup-title {
+    font-size: 1.25rem;
+  }
+
+  .logout-popup-actions {
+    flex-direction: column;
+  }
+
+  .logout-popup-button {
+    width: 100%;
+  }
+}
+
