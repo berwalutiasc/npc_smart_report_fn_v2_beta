@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import LogoutConfirmation from '@/components/LogoutConfirmation';
 import { useLogout } from '@/hooks/useLogout';
+import { toastSuccess, toastError, toastWarning } from '@/lib/toast-utils';
 import './profile.css';
 
 // TYPES
@@ -71,6 +72,12 @@ interface StatItem {
   color: string;
 }
 
+interface ClassOption {
+  id: string;
+  name: string;
+  [key: string]: any; // Allow for additional properties
+}
+
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [studentData, setStudentData] = useState<StudentData | null>(null);
@@ -85,6 +92,8 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [stats, setStats] = useState<StatItem[]>([]);
+  const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const { logout, isLoggingOut } = useLogout();
 
   const [studentEmail, setStudentEmail] = useState<string | null>(null);
@@ -106,7 +115,6 @@ const ProfilePage = () => {
         },
         credentials: 'include'
       });
-      // const response = await fetch(`http://localhost:5000/api/student/dashboard/maserati?email=${userId}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch profile ${response.status}`);
@@ -157,9 +165,46 @@ const ProfilePage = () => {
     }
   };
 
+  // Fetch classes from API
+  const fetchClasses = async () => {
+    setIsLoadingClasses(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/class/getAllClass', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch classes: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // Handle API response structure: { success: true, Classs: [...] }
+      let classesData: ClassOption[] = [];
+      if (result.success && result.Classs && Array.isArray(result.Classs)) {
+        classesData = result.Classs;
+      } else if (Array.isArray(result)) {
+        classesData = result;
+      }
+
+      setClasses(classesData);
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      // Optionally show error to user or set empty array
+      setClasses([]);
+    } finally {
+      setIsLoadingClasses(false);
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
     fetchStudentProfile();
+    fetchClasses();
   }, []);
 
   // Handle edit mode toggle
@@ -190,11 +235,12 @@ const ProfilePage = () => {
     
     try {
       const userId = studentEmail;
-      const response = await fetch('http://localhost:5000/api/student/update-profile', {
-        method: 'PUT',
+      const response = await fetch('http://localhost:5000/api/student/dashboard/updateProfile', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           userId,
           updates: {
@@ -202,7 +248,7 @@ const ProfilePage = () => {
             email: editData.email,
             phone: editData.phone,
             address: editData.address,
-            // Add other fields as needed
+            newClass: editData.class,
           }
         })
       });
@@ -212,17 +258,25 @@ const ProfilePage = () => {
       }
 
       const result = await response.json();
-      
       if (result.success) {
         setStudentData(editData);
         setIsEditing(false);
-        alert('Profile updated successfully!');
+        toastSuccess({
+          title: 'Profile Updated',
+          description: 'Your profile has been updated successfully!'
+        });
       } else {
-        alert('Failed to update profile: ' + result.message);
+        toastError({
+          title: 'Update Failed',
+          description: result.message || 'Failed to update profile. Please try again.'
+        });
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Error updating profile. Please try again.');
+      toastError({
+        title: 'Update Error',
+        description: 'An error occurred while updating your profile. Please try again.'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -231,12 +285,18 @@ const ProfilePage = () => {
   // Handle password change
   const handlePasswordSubmit = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Passwords do not match!');
+      toastError({
+        title: 'Password Mismatch',
+        description: 'The new passwords do not match. Please try again.'
+      });
       return;
     }
     
     if (passwordData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
+      toastWarning({
+        title: 'Password Too Short',
+        description: 'Password must be at least 8 characters long.'
+      });
       return;
     }
 
@@ -261,13 +321,22 @@ const ProfilePage = () => {
       if (result.success) {
         setIsChangingPassword(false);
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        alert('Password changed successfully!');
+        toastSuccess({
+          title: 'Password Changed',
+          description: 'Your password has been changed successfully!'
+        });
       } else {
-        alert('Failed to change password: ' + result.message);
+        toastError({
+          title: 'Password Change Failed',
+          description: result.message || 'Failed to change password. Please try again.'
+        });
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      alert('Error changing password. Please try again.');
+      toastError({
+        title: 'Password Change Error',
+        description: 'An error occurred while changing your password. Please try again.'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -526,13 +595,19 @@ const ProfilePage = () => {
                   Class
                 </label>
                 {isEditing ? (
-                  <input
-                    type="text"
+                  <select
                     className="info-input"
                     value={editData?.class || ''}
                     onChange={(e) => handleInputChange('class', e.target.value)}
-                    placeholder="Enter your class"
-                  />
+                    disabled={isLoadingClasses}
+                  >
+                    <option value="">Select a class</option>
+                    {classes.map((classOption) => (
+                      <option key={classOption.id} value={classOption.name}>
+                        {classOption.name}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <div className="info-value">{studentData.class}</div>
                 )}
