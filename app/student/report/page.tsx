@@ -102,7 +102,7 @@ const ReportPage = () => {
         limit: '10'
       });
       // This will call the actual API endpoint we created
-      const response = await fetch(`http://localhost:5000/api/student/report/getReports?${params}`, {
+      const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/report/getReports?${params}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ const ReportPage = () => {
   const fetchReportDetails = async (reportId: string) => {
     setLoadingReportDetails(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/student/report/getReportById/${reportId}`, {
+      const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/report/getReportById/${reportId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -299,7 +299,7 @@ const ReportPage = () => {
       setDownloadingId(reportId); // optional: show loading state
     
       const response = await fetch(
-        `http://localhost:5000/api/student/report/download/${reportId}`,
+        `https://npc-smart-report-bn-v2-beta.onrender.com/api/student/report/download/${reportId}`,
         {
           credentials: 'include',
           headers: {

@@ -152,7 +152,7 @@ const WeeklyReportPage = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:5000/api/admin/dashboard/getWeeklyReport');
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/admin/dashboard/getWeeklyReport');
       const result: ApiResponse = await response.json();
       
       if (!response.ok || !result.success) {

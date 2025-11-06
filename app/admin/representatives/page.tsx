@@ -107,7 +107,7 @@ const RepresentativesPage = () => {
       if (searchTerm) params.append('search', searchTerm);
       if (filterDepartment !== 'all') params.append('department', filterDepartment);
 
-      const response = await fetch(`http://localhost:5000/api/admin/dashboard/getRepresentatives?${params}`);
+      const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/admin/dashboard/getRepresentatives?${params}`);
       const result: ApiResponse = await response.json();
       
       if (!response.ok || !result.success) {

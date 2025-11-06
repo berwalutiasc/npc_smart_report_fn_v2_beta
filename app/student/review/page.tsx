@@ -74,7 +74,7 @@ interface ApiResponse {
 // ==================== COMPONENT ====================
 const ReviewPage = () => {
   const BASE_URL =
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://npc-smart-report-bn-v2-beta.onrender.com";
 
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<Report | null>(null);

@@ -18,7 +18,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [newUsers, setNewUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    const socketInstance = io(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000', {
+    const socketInstance = io(process.env.NEXT_PUBLIC_BACKEND_URL || 'https://npc-smart-report-bn-v2-beta.onrender.com', {
       transports: ['websocket', 'polling']
     });
 

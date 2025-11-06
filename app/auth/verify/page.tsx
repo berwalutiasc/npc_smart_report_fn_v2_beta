@@ -80,7 +80,7 @@ const VerifyPage = () => {
     try {
       
       //send data to the api
-      const response = await fetch('http://localhost:5000/api/auth/verifyLoginOtp', {
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/auth/verifyLoginOtp', {
         method: 'POST',
         credentials: 'include',
         headers: {

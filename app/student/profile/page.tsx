@@ -108,7 +108,7 @@ const ProfilePage = () => {
     setIsLoading(true);
     try {
       const userId = studentEmail;
-      const response = await fetch(`http://localhost:5000/api/student/dashboard/getProfile`, {
+      const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/getProfile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +169,7 @@ const ProfilePage = () => {
   const fetchClasses = async () => {
     setIsLoadingClasses(true);
     try {
-      const response = await fetch('http://localhost:5000/api/class/getAllClass', {
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/class/getAllClass', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -235,7 +235,7 @@ const ProfilePage = () => {
     
     try {
       const userId = studentEmail;
-      const response = await fetch('http://localhost:5000/api/student/dashboard/updateProfile', {
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/updateProfile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ const ProfilePage = () => {
     
     try {
       const userId = studentEmail;
-      const response = await fetch('http://localhost:5000/api/student/change-password', {
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

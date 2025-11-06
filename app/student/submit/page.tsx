@@ -58,7 +58,7 @@ const SubmitPage = () => {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/item/getAllItems");
+        const res = await fetch("https://npc-smart-report-bn-v2-beta.onrender.com/api/item/getAllItems");
         const data = await res.json();
 
         if (data.success && Array.isArray(data.items)) {
@@ -143,7 +143,7 @@ const SubmitPage = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("http://localhost:5000/api/student/report/submit", {
+      const response = await fetch("https://npc-smart-report-bn-v2-beta.onrender.com/api/student/report/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: 'include',

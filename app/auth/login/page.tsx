@@ -55,7 +55,7 @@ const LoginPageContent = () => {
     
     try {
       // Send data to the API
-      const response = await fetch('http://localhost:5000/api/auth/loginUser', {
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/auth/loginUser', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ const LoginPageContent = () => {
   // const checkAuthStatus = async () => {
   //   try {
   //     console.log('🔍 Checking auth status...');
-  //     const response = await fetch('http://localhost:5000/api/auth/check', {
+  //     const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/auth/check', {
   //       credentials: 'include'
   //     });
   //     const data = await response.json();

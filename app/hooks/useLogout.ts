@@ -29,7 +29,7 @@ export const useLogout = (): UseLogoutReturn => {
     
     try {
       // Call logout API
-      const response = await fetch('http://localhost:5000/api/auth/logoutUser', {
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/auth/logoutUser', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

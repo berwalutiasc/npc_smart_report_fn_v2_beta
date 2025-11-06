@@ -20,7 +20,7 @@ const EmailVerifyPageContent = () => {
 
   const verifyEmail = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/auth/verifySignupLink`, {
+      const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/auth/verifySignupLink`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

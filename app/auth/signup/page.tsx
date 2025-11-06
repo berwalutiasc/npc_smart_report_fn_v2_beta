@@ -44,7 +44,7 @@ const SignupPage = () => {
     // Simulate API call
     try {
       
-      const response = await fetch('http://localhost:5000/api/auth/createStudent', {
+      const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/auth/createStudent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
