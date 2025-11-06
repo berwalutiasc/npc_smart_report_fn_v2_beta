@@ -108,6 +108,12 @@ const DashboardPage = () => {
   const [reports, setReports] = useState<RecentReport[]>([]);
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [studentEmail, setStudentEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStudentEmail(localStorage.getItem('studentEmail'));
+  }, [studentEmail]);
+
 
   // Fetch data from API
   useEffect(() => {
@@ -115,8 +121,8 @@ const DashboardPage = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/mydash?token=' + localStorage.getItem('token'), {
+        alert(studentEmail);
+        const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/mydash?email=' + studentEmail, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
