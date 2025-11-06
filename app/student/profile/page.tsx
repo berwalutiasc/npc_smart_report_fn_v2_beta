@@ -96,16 +96,23 @@ const ProfilePage = () => {
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const { logout, isLoggingOut } = useLogout();
 
-  // Fetch student profile from API - FIXED: No userId needed, backend gets it from cookies
+  // Fetch student profile from API - UPDATED: Using email parameter like dashboard
   const fetchStudentProfile = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/getProfile`, {
+      // Get email from localStorage like dashboard does
+      const studentEmail = localStorage.getItem('studentEmail');
+      
+      if (!studentEmail) {
+        throw new Error('Student email not found in localStorage');
+      }
+
+      const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/getProfile?email=${studentEmail}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include' // ✅ Cookies will be sent automatically
+        credentials: 'include'
       });
       
       if (!response.ok) {
@@ -133,7 +140,6 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Error fetching student profile:', error);
-      alert(error);
       toastError({
         title: 'Network Error',
         description: 'Failed to connect to server. Please try again.'
@@ -173,7 +179,7 @@ const ProfilePage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include' // ✅ Cookies will be sent
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -225,20 +231,24 @@ const ProfilePage = () => {
     setPasswordData({ ...passwordData, [field]: value });
   };
 
-  // Save profile changes - FIXED: No userId needed
+  // Save profile changes
   const handleSave = async () => {
     if (!editData) return;
     
     setIsSaving(true);
     
     try {
+      // Get email from localStorage for the update request
+      const studentEmail = localStorage.getItem('studentEmail');
+      
       const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/updateProfile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // ✅ Cookies will be sent
+        credentials: 'include',
         body: JSON.stringify({
+          email: studentEmail, // Include email in the request body
           updates: {
             name: `${editData.firstName} ${editData.lastName}`,
             email: editData.email,
@@ -257,6 +267,12 @@ const ProfilePage = () => {
       if (result.success) {
         setStudentData(editData);
         setIsEditing(false);
+        
+        // Update localStorage if email was changed
+        if (editData.email !== studentData?.email) {
+          localStorage.setItem('studentEmail', editData.email);
+        }
+        
         toastSuccess({
           title: 'Profile Updated',
           description: 'Your profile has been updated successfully!'
@@ -278,7 +294,7 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle password change - FIXED: No userId needed, added credentials
+  // Handle password change
   const handlePasswordSubmit = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toastError({
@@ -299,13 +315,17 @@ const ProfilePage = () => {
     setIsSaving(true);
     
     try {
+      // Get email from localStorage for the password change request
+      const studentEmail = localStorage.getItem('studentEmail');
+      
       const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // ✅ ADDED THIS - CRITICAL FIX
+        credentials: 'include',
         body: JSON.stringify({
+          email: studentEmail, // Include email in the request
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
         })
