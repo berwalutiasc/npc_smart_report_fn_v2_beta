@@ -12,7 +12,7 @@
  * - Account actions (logout)
  * - Student statistics
  * - Smooth animations
- * - API integration with localhost:5000
+ * - API integration with live backend
  */
 
 "use client";
@@ -75,7 +75,7 @@ interface StatItem {
 interface ClassOption {
   id: string;
   name: string;
-  [key: string]: any; // Allow for additional properties
+  [key: string]: any;
 }
 
 const ProfilePage = () => {
@@ -96,28 +96,20 @@ const ProfilePage = () => {
   const [isLoadingClasses, setIsLoadingClasses] = useState(false);
   const { logout, isLoggingOut } = useLogout();
 
-  const [studentEmail, setStudentEmail] = useState<string | null>(null);
-  useEffect(() => {
-    setStudentEmail(localStorage.getItem('studentEmail'));
-  }, []);
-  // Get current user ID - Replace with your actual auth context
-
-
-  // Fetch student profile from API
+  // Fetch student profile from API - FIXED: No userId needed, backend gets it from cookies
   const fetchStudentProfile = async () => {
     setIsLoading(true);
     try {
-      const userId = studentEmail;
       const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/getProfile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include'
+        credentials: 'include' // ✅ Cookies will be sent automatically
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch profile ${response.status}`);
+        throw new Error(`Failed to fetch profile: ${response.status}`);
       }
       
       const result = await response.json();
@@ -127,18 +119,24 @@ const ProfilePage = () => {
         setEditData(result.data);
         
         // Transform statistics for frontend display
-        const transformedStats = result.data.statistics.map((stat: StatItem) => ({
+        const transformedStats = result.data.statistics?.map((stat: StatItem) => ({
           ...stat,
           icon: getIconComponent(stat.icon)
-        }));
+        })) || [];
         setStats(transformedStats);
       } else {
         console.error('Failed to fetch profile:', result.message);
-        // Fallback to empty state or show error
+        toastError({
+          title: 'Profile Error',
+          description: result.message || 'Failed to load profile'
+        });
       }
     } catch (error) {
       console.error('Error fetching student profile:', error);
-      // You can set a fallback state here if needed
+      toastError({
+        title: 'Network Error',
+        description: 'Failed to connect to server. Please try again.'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -174,7 +172,7 @@ const ProfilePage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include'
+        credentials: 'include' // ✅ Cookies will be sent
       });
 
       if (!response.ok) {
@@ -183,7 +181,7 @@ const ProfilePage = () => {
 
       const result = await response.json();
       
-      // Handle API response structure: { success: true, Classs: [...] }
+      // Handle API response structure
       let classesData: ClassOption[] = [];
       if (result.success && result.Classs && Array.isArray(result.Classs)) {
         classesData = result.Classs;
@@ -194,7 +192,6 @@ const ProfilePage = () => {
       setClasses(classesData);
     } catch (error) {
       console.error('Error fetching classes:', error);
-      // Optionally show error to user or set empty array
       setClasses([]);
     } finally {
       setIsLoadingClasses(false);
@@ -227,22 +224,20 @@ const ProfilePage = () => {
     setPasswordData({ ...passwordData, [field]: value });
   };
 
-  // Save profile changes
+  // Save profile changes - FIXED: No userId needed
   const handleSave = async () => {
     if (!editData) return;
     
     setIsSaving(true);
     
     try {
-      const userId = studentEmail;
       const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/updateProfile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
+        credentials: 'include', // ✅ Cookies will be sent
         body: JSON.stringify({
-          userId,
           updates: {
             name: `${editData.firstName} ${editData.lastName}`,
             email: editData.email,
@@ -254,7 +249,7 @@ const ProfilePage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error(`Failed to update profile: ${response.status}`);
       }
 
       const result = await response.json();
@@ -282,7 +277,7 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle password change
+  // Handle password change - FIXED: No userId needed, added credentials
   const handlePasswordSubmit = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toastError({
@@ -303,18 +298,21 @@ const ProfilePage = () => {
     setIsSaving(true);
     
     try {
-      const userId = studentEmail;
       const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // ✅ ADDED THIS - CRITICAL FIX
         body: JSON.stringify({
-          userId,
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to change password: ${response.status}`);
+      }
 
       const result = await response.json();
       
@@ -628,11 +626,11 @@ const ProfilePage = () => {
                   />
                 ) : (
                   <div className="info-value">
-                    {new Date(studentData.dateOfBirth).toLocaleDateString('en-US', { 
+                    {studentData.dateOfBirth ? new Date(studentData.dateOfBirth).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
                       day: 'numeric' 
-                    })}
+                    }) : 'Not set'}
                   </div>
                 )}
               </div>
@@ -670,7 +668,7 @@ const ProfilePage = () => {
                     placeholder="Enter your address"
                   />
                 ) : (
-                  <div className="info-value">{studentData.address}</div>
+                  <div className="info-value">{studentData.address || 'Not set'}</div>
                 )}
               </div>
             </div>
