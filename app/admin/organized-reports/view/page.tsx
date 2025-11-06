@@ -14,7 +14,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AdminLayout from '../../components/AdminLayout';
 import Link from 'next/link';
@@ -81,7 +81,7 @@ interface ApiResponse {
   message: string;
 }
 
-const ViewWeekReportsPage = () => {
+const ViewWeekReportsPageContent = () => {
   const searchParams = useSearchParams();
   const weekNumber = searchParams.get('week') || '44';
   const startDate = searchParams.get('startDate');
@@ -512,6 +512,21 @@ const ViewWeekReportsPage = () => {
         </div>
       )}
     </AdminLayout>
+  );
+};
+
+const ViewWeekReportsPage = () => {
+  return (
+    <Suspense fallback={
+      <AdminLayout>
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </AdminLayout>
+    }>
+      <ViewWeekReportsPageContent />
+    </Suspense>
   );
 };
 
