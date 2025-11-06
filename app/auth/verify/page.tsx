@@ -129,7 +129,7 @@ const VerifyPage = () => {
       } else {
         toastError({
           title: 'Verification Failed',
-          description: data.error || 'Please check your OTP and try again.',
+          description: data.message || 'Please check your OTP and try again.',
         })
       }
     } catch (error) {
