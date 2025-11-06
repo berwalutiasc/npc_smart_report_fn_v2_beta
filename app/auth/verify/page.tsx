@@ -126,7 +126,7 @@ const VerifyPage = () => {
 
         //wait 2 seconds before redirecting to let user see the toast
         setTimeout(() => {
-          router.push(`${process.env.NEXT_PUBLIC_BASE_URL}${directory}`);
+          router.push(`https://npc-smart-report-fn-v2-beta-bozj.vercel.app/${directory}`);
         }, 3000);
       } else {
         toastError({
