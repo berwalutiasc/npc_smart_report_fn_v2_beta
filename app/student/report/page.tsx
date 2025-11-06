@@ -22,7 +22,7 @@ import './report.css';
 
 // TYPES
 interface Report {
-  id: string; // Changed from number to string to match UUID from database
+  id: string;
   title: string;
   submissionDate: string;
   csApproved: boolean;
@@ -79,38 +79,51 @@ const ReportPage = () => {
   const [reportDetails, setReportDetails] = useState<ReportDetail | null>(null);
   const [loadingReportDetails, setLoadingReportDetails] = useState(false);
 
-
   useEffect(() => {
-    const studentEmail = localStorage.getItem("studentEmail") || '';
-    setStudentEmail(studentEmail);
+    const email = localStorage.getItem("studentEmail") || '';
+    setStudentEmail(email);
   }, []);
-  
-   
 
-  // Fetch reports from API - This will work with the created API
+  // Fetch reports from API
   const fetchReports = async (filter: FilterType = activeFilter, search: string = searchQuery, page: number = 1) => {
-    if (!studentEmail) return; // Don't fetch if email is not set yet
+    if (!studentEmail) {
+      console.log('Student email not available yet');
+      return;
+    }
     
     setLoading(true);
     
-    try {      
+    try {
+      // Build query parameters
       const params = new URLSearchParams({
         studentEmail: studentEmail,
-        filter,
-        search,
         page: page.toString(),
         limit: '10'
       });
-      // This will call the actual API endpoint we created
+
+      // Add filter if not 'all'
+      if (filter && filter !== 'all') {
+        params.append('filter', filter);
+      }
+
+      // Add search query if provided
+      if (search && search.trim()) {
+        params.append('search', search.trim());
+      }
+
+      console.log('Fetching reports with params:', params.toString());
+
       const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/report/getReports?${params}`, {
+        method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
       });
       
-      // Handle 404 (not found) gracefully - no reports exist
+      // Handle 404 (not found) gracefully
       if (response.status === 404) {
+        console.log('No reports found (404)');
         setReports([]);
         setPagination({
           currentPage: 1,
@@ -123,27 +136,19 @@ const ReportPage = () => {
         return;
       }
       
-      // For other errors, handle gracefully without throwing
+      // Handle other HTTP errors
       if (!response.ok) {
-        console.log('No reports available');
-        setReports([]);
-        setPagination({
-          currentPage: 1,
-          totalPages: 1,
-          totalReports: 0,
-          hasNext: false,
-          hasPrev: false
-        });
-        setLoading(false);
-        return;
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
       const result = await response.json();
+      console.log('API response:', result);
 
-      if (result.success) {
-        // Handle case where data exists but reports array might be empty
-        const reports = result.data?.reports || [];
-        const pagination = result.data?.pagination || {
+      if (result.success && result.data) {
+        const reportsData = result.data.reports || [];
+        const paginationData = result.data.pagination || {
           currentPage: 1,
           totalPages: 1,
           totalReports: 0,
@@ -151,11 +156,14 @@ const ReportPage = () => {
           hasPrev: false
         };
         
-        setReports(reports);
-        setPagination(pagination);
+        setReports(reportsData);
+        setPagination(paginationData);
+        
+        if (reportsData.length === 0) {
+          console.log('No reports found in response data');
+        }
       } else {
-        // No reports found or API returned failure - handle gracefully
-        console.log('No reports found:', result.message || 'No reports available');
+        console.log('API returned failure:', result.message);
         setReports([]);
         setPagination({
           currentPage: 1,
@@ -166,8 +174,11 @@ const ReportPage = () => {
         });
       }
     } catch (error) {
-      // Network or other errors - handle gracefully without throwing
-      console.log('No reports available at this time');
+      console.error('Error fetching reports:', error);
+      toastError({
+        title: 'Failed to Load Reports',
+        description: 'Unable to fetch reports. Please try again later.',
+      });
       setReports([]);
       setPagination({
         currentPage: 1,
@@ -183,11 +194,16 @@ const ReportPage = () => {
 
   // Initial load and handle filter/search changes
   useEffect(() => {
-    if (!studentEmail) return; // Wait for email to be set
+    if (!studentEmail) {
+      console.log('Waiting for student email...');
+      return;
+    }
+    
+    console.log('Fetching reports with email:', studentEmail);
     
     const timeoutId = setTimeout(() => {
       fetchReports(activeFilter, searchQuery, 1);
-    }, searchQuery ? 500 : 0); // Only debounce if there's a search query
+    }, searchQuery ? 500 : 0);
 
     return () => clearTimeout(timeoutId);
   }, [studentEmail, activeFilter, searchQuery]);
@@ -196,7 +212,10 @@ const ReportPage = () => {
   const fetchReportDetails = async (reportId: string) => {
     setLoadingReportDetails(true);
     try {
+      console.log('Fetching report details for ID:', reportId);
+      
       const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/report/getReportById/${reportId}`, {
+        method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -214,24 +233,19 @@ const ReportPage = () => {
         return;
       }
       
-      // For other errors, handle gracefully
+      // Handle other errors
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to load report details' }));
-        setReportDetails(null);
-        toastError({
-          title: 'Failed to Load Report',
-          description: errorData.message || 'Failed to load report details. Please try again.',
-        });
-        setLoadingReportDetails(false);
-        return;
+        const errorText = await response.text();
+        console.error('Report details API error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
       const result = await response.json();
+      console.log('Report details response:', result);
       
       if (result.success && result.data) {
         setReportDetails(result.data);
       } else {
-        // No report details found - handle gracefully
         setReportDetails(null);
         toastError({
           title: 'Report Not Available',
@@ -239,8 +253,7 @@ const ReportPage = () => {
         });
       }
     } catch (error) {
-      // Network or other errors - handle gracefully
-      console.log('Error loading report details');
+      console.error('Error loading report details:', error);
       setReportDetails(null);
       toastError({
         title: 'Error',
@@ -296,27 +309,21 @@ const ReportPage = () => {
     setDownloadingId(reportId);
     
     try {
-      setDownloadingId(reportId); // optional: show loading state
-    
+      console.log('Downloading report:', reportId);
+      
       const response = await fetch(
         `https://npc-smart-report-bn-v2-beta.onrender.com/api/student/report/download/${reportId}`,
         {
+          method: 'GET',
           credentials: 'include',
-          headers: {
-            // Do NOT set 'Content-Type' here for GET download
-          },
         }
       );
     
-      // Handle errors gracefully
+      // Handle errors
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to download report' }));
-        toastError({
-          title: 'Download Failed',
-          description: errorData.message || 'Failed to download report. Please try again.',
-        });
-        setDownloadingId(null);
-        return;
+        const errorText = await response.text();
+        console.error('Download error:', errorText);
+        throw new Error(`Download failed: ${response.status}`);
       }
     
       // Get raw binary data
@@ -326,7 +333,7 @@ const ReportPage = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${reportId}.pdf`; // file name
+      a.download = `report-${reportId}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -338,51 +345,48 @@ const ReportPage = () => {
       });
     } catch (error) {
       console.error('Download failed:', error);
-      toastSuccess({
-        title: 'Download in Progress',
-        description: 'Report is being downloaded successfully.',
+      toastError({
+        title: 'Download Failed',
+        description: 'Failed to download report. Please try again.',
       });
     } finally {
-      setDownloadingId(null); // reset loading state
+      setDownloadingId(null);
     }
-    
   };
 
-  // Handle pagination - This will use the real API
+  // Handle pagination
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       fetchReports(activeFilter, searchQuery, newPage);
     }
   };
 
+  // Handle filter change
+  const handleFilterChange = (filter: FilterType) => {
+    setActiveFilter(filter);
+  };
+
+  // Handle search input change with debouncing
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
   return (
     <StudentLayout>
       {/* PAGE HEADER */}
-      <div className="page-header" style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          fontSize: '2rem', 
-          fontWeight: '700', 
-          color: '#1a202c',
-          margin: 0 
-        }}>
-          My Reports
-        </h1>
-        <p style={{ 
-          color: '#718096', 
-          marginTop: '0.5rem',
-          fontSize: '0.95rem' 
-        }}>
-          {/* This will show real count from API */}
+      <div className="page-header">
+        <h1>My Reports</h1>
+        <p>
           View and manage your submitted reports {pagination.totalReports > 0 && `(${pagination.totalReports} total)`}
         </p>
       </div>
 
-      {/* FILTERS AND SEARCH - These will work with real API filtering */}
+      {/* FILTERS AND SEARCH */}
       <div className="report-controls fade-in">
         <div className="filter-buttons">
           <button
             className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveFilter('all')}
+            onClick={() => handleFilterChange('all')}
             disabled={loading}
           >
             <Filter size={16} />
@@ -390,7 +394,7 @@ const ReportPage = () => {
           </button>
           <button
             className={`filter-btn ${activeFilter === 'daily' ? 'active' : ''}`}
-            onClick={() => setActiveFilter('daily')}
+            onClick={() => handleFilterChange('daily')}
             disabled={loading}
           >
             <Calendar size={16} />
@@ -398,7 +402,7 @@ const ReportPage = () => {
           </button>
           <button
             className={`filter-btn ${activeFilter === 'weekly' ? 'active' : ''}`}
-            onClick={() => setActiveFilter('weekly')}
+            onClick={() => handleFilterChange('weekly')}
             disabled={loading}
           >
             <Calendar size={16} />
@@ -406,7 +410,7 @@ const ReportPage = () => {
           </button>
           <button
             className={`filter-btn ${activeFilter === 'monthly' ? 'active' : ''}`}
-            onClick={() => setActiveFilter('monthly')}
+            onClick={() => handleFilterChange('monthly')}
             disabled={loading}
           >
             <Calendar size={16} />
@@ -420,17 +424,17 @@ const ReportPage = () => {
             type="text"
             placeholder="Search reports by title or comment..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             className="search-input"
             disabled={loading}
           />
         </div>
       </div>
 
-      {/* REPORTS LIST - This will display real data from API */}
+      {/* REPORTS LIST */}
       <div className="reports-container">
         {loading ? (
-          // Loading skeletons - shown while fetching from API
+          // Loading skeletons
           <div className="reports-list">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="report-card skeleton-card">
@@ -441,18 +445,26 @@ const ReportPage = () => {
             ))}
           </div>
         ) : reports.length === 0 ? (
-          // Empty state - shown when no reports found
+          // Empty state
           <div className="empty-state fade-in">
             <FileText size={64} strokeWidth={1.5} />
             <h3>No reports found</h3>
             <p>
-              {searchQuery
-                ? 'Try adjusting your search query'
-                : 'No reports match the selected filter'}
+              {searchQuery || activeFilter !== 'all'
+                ? 'Try adjusting your search or filter criteria'
+                : 'You haven\'t submitted any reports yet'}
             </p>
+            {!searchQuery && activeFilter === 'all' && (
+              <button 
+                className="btn-primary"
+                onClick={() => window.location.href = '/student/submit'}
+              >
+                Submit Your First Report
+              </button>
+            )}
           </div>
         ) : (
-          // Reports list - populated with real data from API
+          // Reports list
           <>
             <div className="reports-list">
               {reports.map((report, index) => (
@@ -473,14 +485,12 @@ const ReportPage = () => {
                             day: 'numeric'
                           })}
                         </span>
-                        {/* Class info from real data */}
                         {report.class && (
                           <span className="report-class">Class: {report.class}</span>
                         )}
                       </div>
                     </div>
                     
-                    {/* Status from real API data */}
                     <div className={`report-status status-${report.status}`}>
                       {report.status === 'approved' && <CheckCircle size={16} />}
                       {report.status === 'pending' && <Clock size={16} />}
@@ -510,7 +520,7 @@ const ReportPage = () => {
               ))}
             </div>
 
-            {/* PAGINATION - This will work with real pagination from API */}
+            {/* PAGINATION */}
             {pagination.totalPages > 1 && (
               <div className="pagination">
                 <button
@@ -592,8 +602,6 @@ const ReportPage = () => {
                 </div>
 
                 <div className="report-modal-body">
-                  {/* Approval Status */}
-
                   {/* General Comment */}
                   {reportDetails.generalComment && (
                     <div className="general-comment-section">
@@ -635,6 +643,9 @@ const ReportPage = () => {
               <div className="report-modal-error">
                 <XCircle size={48} />
                 <p>Failed to load report details</p>
+                <button className="btn-retry" onClick={() => selectedReportId && fetchReportDetails(selectedReportId)}>
+                  Try Again
+                </button>
               </div>
             )}
           </div>
