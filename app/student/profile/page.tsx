@@ -133,6 +133,7 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Error fetching student profile:', error);
+      alert(error);
       toastError({
         title: 'Network Error',
         description: 'Failed to connect to server. Please try again.'
