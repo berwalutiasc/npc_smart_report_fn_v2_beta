@@ -116,6 +116,8 @@ const VerifyPage = () => {
           localStorage.setItem('studentName', data.user.name);
           localStorage.setItem('studentEmail', data.user.email);
           localStorage.setItem('studentRole', data.user.studentRole);
+          //let's keep the token in local storage
+          localStorage.setItem('token', data.token);
         }else {
           //admin
           localStorage.setItem('role', role);

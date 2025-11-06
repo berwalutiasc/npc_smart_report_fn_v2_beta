@@ -127,7 +127,6 @@ const DashboardPage = () => {
         });
 
         if (!response.ok) {
-          alert(response);
           throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
         }
 
