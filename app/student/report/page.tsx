@@ -93,7 +93,6 @@ const ReportPage = () => {
     }
     
     setLoading(true);
-    alert(studentEmail);
     try {
       // Build query parameters
       const params = new URLSearchParams({
