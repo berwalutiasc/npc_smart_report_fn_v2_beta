@@ -127,7 +127,8 @@ const DashboardPage = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch dashboard data: ${response.status}`);
+          alert(response);
+          throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
         }
 
         const responseData: ApiResponse = await response.json();
