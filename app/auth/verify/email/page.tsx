@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthLayout from '../../login/authLayout';
 import SubmitButton from '@/components/submitButton/submitButton';
@@ -10,7 +10,7 @@ import './verify-email.css';
 import { toastSuccess, toastError } from '@/lib/toast-utils';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
 
-const EmailVerifyPage = () => {
+const EmailVerifyPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -152,6 +152,35 @@ const EmailVerifyPage = () => {
       </AuthLayout>
       <FloatingClock />
     </>
+  );
+};
+
+const EmailVerifyPage = () => {
+  return (
+    <Suspense fallback={
+      <>
+        <AuthLayout
+          welcomeMessage="Email Verification"
+          title="Verify Your Email"
+          subtitle="Loading verification page..."
+        >
+          <div className="verify-email-content">
+            <div className="verify-status verify-loading">
+              <div className="verify-icon-wrapper loading">
+                <Loader2 className="verify-icon spinning" />
+              </div>
+              <h3 className="verify-title">Loading...</h3>
+              <p className="verify-description">
+                Please wait while we load the verification page...
+              </p>
+            </div>
+          </div>
+        </AuthLayout>
+        <FloatingClock />
+      </>
+    }>
+      <EmailVerifyPageContent />
+    </Suspense>
   );
 };
 

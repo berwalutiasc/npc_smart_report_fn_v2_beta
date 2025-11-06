@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useInput } from '@/hooks/useInput';
 import AuthLayout from './authLayout';
 import FormInput from '@/components/formInput/formInput';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toastSuccess, toastError, toastWarning } from '@/lib/toast-utils';
 
-const LoginPage = () => {
+const LoginPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -203,6 +203,27 @@ const LoginPage = () => {
       </AuthLayout>
       <FloatingClock />
     </>
+  );
+};
+
+const LoginPage = () => {
+  return (
+    <Suspense fallback={
+      <>
+        <AuthLayout
+          welcomeMessage="Welcome Back!"
+          title="Sign In to Your Account"
+          subtitle="Loading..."
+        >
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+            <p>Loading login page...</p>
+          </div>
+        </AuthLayout>
+        <FloatingClock />
+      </>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 };
 
