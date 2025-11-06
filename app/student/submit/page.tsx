@@ -48,6 +48,7 @@ const SubmitPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generalComment, setGeneralComment] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
+
   useEffect(() => {
     setStudentEmail(localStorage.getItem("studentEmail") || "");
   }, []);
@@ -72,9 +73,51 @@ const SubmitPage = () => {
           setItems(fetchedItems);
         } else {
           console.error("Failed to fetch items:", data.message);
+          // Fallback mock data if API fails
+          setItems([
+            {
+              id: "1",
+              name: "Classroom Cleanliness",
+              description: "Overall cleanliness and tidiness of the classroom",
+              status: "pending",
+              comment: "",
+            },
+            {
+              id: "2",
+              name: "Furniture Condition",
+              description: "Condition of desks, chairs, and other furniture",
+              status: "pending",
+              comment: "",
+            },
+            {
+              id: "3",
+              name: "Electrical Safety",
+              description: "Electrical outlets, switches, and wiring safety",
+              status: "pending",
+              comment: "",
+            },
+            {
+              id: "4",
+              name: "Lighting System",
+              description: "Functionality of lights and natural lighting",
+              status: "pending",
+              comment: "",
+            },
+            {
+              id: "5",
+              name: "Ventilation",
+              description: "Air quality and ventilation system",
+              status: "pending",
+              comment: "",
+            },
+          ]);
         }
       } catch (err) {
         console.error("Error fetching inspection items:", err);
+        toastError({
+          title: "Connection Error",
+          description: "Failed to load inspection items. Using demo data.",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -117,6 +160,10 @@ const SubmitPage = () => {
    */
   const handleMarkAllGood = () => {
     setItems((prev) => prev.map((item) => ({ ...item, status: "good" })));
+    toastSuccess({
+      title: "All items marked as Good",
+      description: "You can still modify individual items as needed.",
+    });
   };
 
   /**
@@ -126,17 +173,43 @@ const SubmitPage = () => {
     setItems((prev) =>
       prev.map((item) => ({ ...item, status: "pending", comment: "" }))
     );
+    toastSuccess({
+      title: "Selection cleared",
+      description: "All items have been reset to pending status.",
+    });
   };
 
   /**
    * SUBMIT REPORT TO BACKEND
    */
   const handleSubmit = async () => {
+    // Validate that all items are marked
     const hasUnmarked = items.some((item) => item.status === "pending");
     if (hasUnmarked) {
       toastError({
         title: "Incomplete Form",
         description: "Please mark all items before submitting!",
+      });
+      return;
+    }
+
+    // Validate comments for bad and flagged items
+    const itemsNeedingComments = items.filter(
+      (item) => (item.status === "bad" || item.status === "flagged") && !item.comment.trim()
+    );
+
+    if (itemsNeedingComments.length > 0) {
+      toastError({
+        title: "Comments Required",
+        description: `Please add comments for ${itemsNeedingComments.length} item(s) marked as Bad or Flagged.`,
+      });
+      return;
+    }
+
+    if (!studentEmail) {
+      toastError({
+        title: "Authentication Error",
+        description: "Student email not found. Please refresh the page.",
       });
       return;
     }
@@ -149,11 +222,18 @@ const SubmitPage = () => {
         credentials: 'include',
         body: JSON.stringify({
           reporterEmail: studentEmail,
-          //add date of today on title
-          title: "Classroom Inspection Report " + new Date().toLocaleDateString(),
-          //we will provide the comment / notes that was sent by the student in the comment field not for each item but the overall comment / notes
+          title: `Classroom Inspection Report - ${new Date().toLocaleDateString()}`,
           generalComment: generalComment || "Inspection completed successfully.",
-          itemEvaluated: items,
+          itemEvaluated: {
+            items: items,
+            summary: {
+              totalItems: items.length,
+              goodItems: stats.good || 0,
+              badItems: stats.bad || 0,
+              flaggedItems: stats.flagged || 0,
+              completionDate: new Date().toISOString()
+            }
+          },
           category: "ONTIME",
         }),
       });
@@ -164,13 +244,12 @@ const SubmitPage = () => {
           title: "Report Submitted Successfully!",
           description: "Your inspection report has been submitted for review",
         });
-        setItems(
-          items.map((item) => ({
-            ...item,
-            status: "pending",
-            comment: "",
-          }))
-        );
+        // Reset form
+        setItems(prev => prev.map((item) => ({
+          ...item,
+          status: "pending",
+          comment: "",
+        })));
         setGeneralComment("");
       } else {
         toastError({
@@ -181,8 +260,8 @@ const SubmitPage = () => {
     } catch (err) {
       console.error("Error submitting report:", err);
       toastError({
-        title: "Error",
-        description: "An error occurred while submitting your report.",
+        title: "Network Error",
+        description: "An error occurred while submitting your report. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -212,6 +291,7 @@ const SubmitPage = () => {
     return (
       <StudentLayout>
         <div className="loading-screen">
+          <div className="loading-spinner"></div>
           <p>Loading inspection items...</p>
         </div>
       </StudentLayout>
@@ -221,26 +301,9 @@ const SubmitPage = () => {
   return (
     <StudentLayout>
       {/* PAGE HEADER */}
-      <div className="page-header" style={{ marginBottom: "2rem" }}>
-        <h1
-          style={{
-            fontSize: "2rem",
-            fontWeight: "700",
-            color: "#1a202c",
-            margin: 0,
-          }}
-        >
-          Submit Report
-        </h1>
-        <p
-          style={{
-            color: "#718096",
-            marginTop: "0.5rem",
-            fontSize: "0.95rem",
-          }}
-        >
-          Complete the inspection checklist and submit your report
-        </p>
+      <div className="page-header">
+        <h1>Submit Report</h1>
+        <p>Complete the inspection checklist and submit your report</p>
       </div>
 
       <div className="submit-container">
@@ -273,6 +336,14 @@ const SubmitPage = () => {
                       <h4>{item.name}</h4>
                       <p>{item.description}</p>
                     </div>
+                  </div>
+                  <div className={`status-indicator ${item.status}`}>
+                    {getStatusIcon(item.status)}
+                    <span className="status-text">
+                      {item.status === "pending" ? "Pending" : 
+                       item.status === "good" ? "Good" :
+                       item.status === "bad" ? "Bad" : "Flagged"}
+                    </span>
                   </div>
                 </div>
 
@@ -312,17 +383,22 @@ const SubmitPage = () => {
                   <div className="comment-field">
                     <label>
                       Comment / Notes{" "}
-                      {item.status !== "good" && (
-                        <span className="required">*</span>
+                      {item.status !== "good" && item.status !== "pending" && (
+                        <span className="required">* Required</span>
                       )}
                     </label>
                     <textarea
-                      placeholder="Add your observations or notes here..."
+                      placeholder={
+                        item.status === "good" 
+                          ? "Optional comments..." 
+                          : "Please provide details about the issue..."
+                      }
                       value={item.comment}
                       onChange={(e) =>
                         handleCommentChange(item.id, e.target.value)
                       }
                       rows={2}
+                      className={item.status !== "good" && item.status !== "pending" && !item.comment ? "error" : ""}
                     />
                   </div>
                 </div>
@@ -333,7 +409,7 @@ const SubmitPage = () => {
           {/* GENERAL COMMENT / NOTES FIELD */}
           <div className="general-comment-field fade-in" style={{ animationDelay: "0.5s" }}>
             <label htmlFor="generalComment">
-              Comment / Notes
+              Overall Comments / Notes
             </label>
             <textarea
               id="generalComment"
@@ -359,10 +435,7 @@ const SubmitPage = () => {
         {/* RIGHT COLUMN - TIPS & STATS */}
         <div className="submit-right">
           {/* QUICK TIPS */}
-          <div
-            className="tips-card fade-in"
-            style={{ animationDelay: "0.2s" }}
-          >
+          <div className="tips-card fade-in" style={{ animationDelay: "0.2s" }}>
             <div className="tips-header">
               <Lightbulb size={20} />
               <h3>Quick Tips</h3>
@@ -411,17 +484,14 @@ const SubmitPage = () => {
                 <Info size={16} />
                 <p>
                   Always add comments for Bad and Flagged items to provide
-                  context.
+                  context for maintenance teams.
                 </p>
               </div>
             </div>
           </div>
 
           {/* STATISTICS */}
-          <div
-            className="stats-card fade-in"
-            style={{ animationDelay: "0.3s" }}
-          >
+          <div className="stats-card fade-in" style={{ animationDelay: "0.3s" }}>
             <div className="stats-header">
               <TrendingUp size={20} />
               <h3>Submission Stats</h3>
