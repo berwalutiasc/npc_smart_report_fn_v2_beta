@@ -108,12 +108,6 @@ const DashboardPage = () => {
   const [reports, setReports] = useState<RecentReport[]>([]);
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [studentEmail, setStudentEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    setStudentEmail(localStorage.getItem('studentEmail'));
-  }, [studentEmail]);
-
 
   // Fetch data from API
   useEffect(() => {
@@ -121,15 +115,21 @@ const DashboardPage = () => {
       try {
         setLoading(true);
         setError(null);
-        alert(studentEmail);
-        const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/mydash?email=' + studentEmail, {
+        
+        // Get email directly from localStorage
+        const studentEmail = localStorage.getItem('studentEmail');
+        
+        if (!studentEmail) {
+          throw new Error('Student email not found. Please log in again.');
+        }
+
+        const response = await fetch(`https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/mydash?email=${studentEmail}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            // Add authentication token if needed
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-          credentials: 'include' // Include cookies if using session-based auth
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          credentials: 'include'
         });
 
         if (!response.ok) {
@@ -160,6 +160,20 @@ const DashboardPage = () => {
             icon: <Users size={24} />,
             trend: 0,
             color: '#10b981'
+          },
+          {
+            title: 'My Submissions',
+            value: 0,
+            icon: <FileText size={24} />,
+            trend: 0,
+            color: '#8b5cf6'
+          },
+          {
+            title: 'Pending Reviews',
+            value: 0,
+            icon: <Eye size={24} />,
+            trend: 0,
+            color: '#f59e0b'
           }
         ];
         
@@ -187,7 +201,7 @@ const DashboardPage = () => {
         console.error('Error fetching dashboard data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
         
-        // Fallback to mock data in case of error (optional)
+        // Fallback to mock data in case of error
         setStats([
           {
             title: 'Total Reports',
@@ -202,6 +216,20 @@ const DashboardPage = () => {
             icon: <Users size={24} />,
             trend: 0,
             color: '#10b981'
+          },
+          {
+            title: 'My Submissions',
+            value: 0,
+            icon: <FileText size={24} />,
+            trend: 0,
+            color: '#8b5cf6'
+          },
+          {
+            title: 'Pending Reviews',
+            value: 0,
+            icon: <Eye size={24} />,
+            trend: 0,
+            color: '#f59e0b'
           }
         ]);
         setActivities([]);
@@ -226,25 +254,34 @@ const DashboardPage = () => {
   // Calculate max value for chart scaling
   const maxChartValue = Math.max(...(weeklyData || []).map(data => data.count), 1);
 
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return '#10b981';
+      case 'pending': return '#f59e0b';
+      case 'draft': return '#6b7280';
+      case 'rejected': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  // Get activity icon color
+  const getActivityIconColor = (type: string) => {
+    switch (type) {
+      case 'submitted': return '#3b82f6';
+      case 'approved': return '#10b981';
+      case 'pending': return '#f59e0b';
+      case 'rejected': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
   return (
     <StudentLayout>
       {/* PAGE HEADER */}
-      <div className="page-header" style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          fontSize: '2rem', 
-          fontWeight: '700', 
-          color: '#1a202c',
-          margin: 0 
-        }}>
-          Dashboard
-        </h1>
-        <p style={{ 
-          color: '#718096', 
-          marginTop: '0.5rem',
-          fontSize: '0.95rem' 
-        }}>
-          Welcome back! Here's what's happening with your reports.
-        </p>
+      <div className="page-header">
+        <h1>Dashboard</h1>
+        <p>Welcome back! Here's what's happening with your reports.</p>
       </div>
 
       {/* ERROR MESSAGE */}
@@ -260,7 +297,7 @@ const DashboardPage = () => {
         {loading ? (
           // Loading skeletons
           <>
-            {[1, 2].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="stat-card skeleton-card">
                 <div className="skeleton skeleton-icon"></div>
                 <div className="skeleton skeleton-text"></div>
@@ -286,7 +323,7 @@ const DashboardPage = () => {
               </div>
               <div className="stat-content">
                 <h3 className="stat-title">{stat.title}</h3>
-                <div className="stat-value counter">{stat.value}</div>
+                <div className="stat-value counter">{stat.value.toLocaleString()}</div>
               </div>
             </div>
           ))
@@ -319,7 +356,8 @@ const DashboardPage = () => {
                         className="chart-bar slide-up"
                         style={{ 
                           height: `${(data.count / maxChartValue) * 100}%`,
-                          animationDelay: `${0.5 + index * 0.1}s`
+                          animationDelay: `${0.5 + index * 0.1}s`,
+                          backgroundColor: data.count > 0 ? '#3b82f6' : '#e2e8f0'
                         }}
                       >
                         <span className="bar-value">{data.count}</span>
@@ -340,6 +378,9 @@ const DashboardPage = () => {
               <Clock size={20} />
               Recent Activity
             </h3>
+            <Link href="/student/report" className="view-all-link">
+              View All <ArrowRight size={16} />
+            </Link>
           </div>
           <div className="card-content">
             {loading ? (
@@ -356,7 +397,10 @@ const DashboardPage = () => {
                     className="activity-item slide-in-right"
                     style={{ animationDelay: `${0.6 + index * 0.1}s` }}
                   >
-                    <div className={`activity-icon ${activity.type}`}>
+                    <div 
+                      className="activity-icon"
+                      style={{ backgroundColor: `${getActivityIconColor(activity.type)}15`, color: getActivityIconColor(activity.type) }}
+                    >
                       {activity.type === 'submitted' && <FileText size={16} />}
                       {activity.type === 'approved' && <CheckCircle size={16} />}
                       {activity.type === 'pending' && <AlertCircle size={16} />}
@@ -376,6 +420,7 @@ const DashboardPage = () => {
               <div className="empty-state">
                 <FileText size={48} />
                 <p>No recent activity</p>
+                <span>Your recent activities will appear here</span>
               </div>
             )}
           </div>
@@ -444,8 +489,14 @@ const DashboardPage = () => {
                       <h4 className="report-title">{report.title}</h4>
                       <p className="report-meta">{report.class} • {report.date}</p>
                     </div>
-                    <div className={`report-status status-${report.status}`}>
-                      {report.status}
+                    <div 
+                      className="report-status"
+                      style={{ 
+                        backgroundColor: `${getStatusColor(report.status)}15`,
+                        color: getStatusColor(report.status)
+                      }}
+                    >
+                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                     </div>
                   </div>
                 ))}
@@ -454,6 +505,7 @@ const DashboardPage = () => {
               <div className="empty-state">
                 <FileText size={48} />
                 <p>No reports yet</p>
+                <span>Your submitted reports will appear here</span>
               </div>
             )}
           </div>
