@@ -118,7 +118,6 @@ const DashboardPage = () => {
         
         // Get email directly from localStorage
         const studentEmail = localStorage.getItem('studentEmail');
-        alert(studentEmail);
         if (!studentEmail) {
           throw new Error('Student email not found. Please log in again.');
         }
