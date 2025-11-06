@@ -116,7 +116,7 @@ const DashboardPage = () => {
         setLoading(true);
         setError(null);
         
-        const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/mydash', {
+        const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/student/dashboard/mydash?token=' + localStorage.getItem('token'), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
