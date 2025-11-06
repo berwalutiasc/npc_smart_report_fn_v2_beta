@@ -80,6 +80,7 @@ const ReportPage = () => {
   const [loadingReportDetails, setLoadingReportDetails] = useState(false);
 
   useEffect(() => {
+    
     const email = localStorage.getItem("studentEmail") || '';
     setStudentEmail(email);
   }, []);
@@ -92,7 +93,7 @@ const ReportPage = () => {
     }
     
     setLoading(true);
-    
+    alert(studentEmail);
     try {
       // Build query parameters
       const params = new URLSearchParams({
