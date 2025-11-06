@@ -72,6 +72,12 @@ const LoginPageContent = () => {
       console.log('Login response:', data);
       
       if (response.ok) {
+        // Persist token for OTP verify fallback (in case cookies are blocked)
+        if (data?.token) {
+          try {
+            localStorage.setItem('loginToken', data.token);
+          } catch {}
+        }
         toastSuccess({
           title: 'Login Successful',
           description: 'Redirecting to Verificaton Page...',

@@ -25,6 +25,7 @@ const EmailVerifyPageContent = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ token: token }),
       });
       const data = await response.json();

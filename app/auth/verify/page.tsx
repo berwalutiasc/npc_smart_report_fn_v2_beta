@@ -70,7 +70,7 @@ const VerifyPage = () => {
     const otpValue = otp.join('');
     
     if (otpValue.length !== 6) {
-      alert('Please enter all 6 digits');
+      toastError({ title: 'Invalid Code', description: 'Please enter all 6 digits.' });
       return;
     }
 
@@ -80,13 +80,15 @@ const VerifyPage = () => {
     try {
       
       //send data to the api
+      const token = (() => { try { return localStorage.getItem('loginToken') || undefined; } catch { return undefined; } })();
       const response = await fetch('https://npc-smart-report-bn-v2-beta.onrender.com/api/auth/verifyLoginOtp', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ otp: otpValue }),
+        body: JSON.stringify({ otp: otpValue, ...(token ? { token } : {}) }),
       });
       const data = await response.json();
       console.log(data);
@@ -145,7 +147,7 @@ const VerifyPage = () => {
   // Handle resend OTP
   const handleResend = () => {
     console.log('Resending OTP...');
-    alert('A new OTP has been sent to your email/phone');
+    toastSuccess({ title: 'OTP Sent', description: 'A new OTP has been sent to your email/phone.' });
     setOtp(Array(6).fill(''));
     inputRefs.current[0]?.focus();
   };
